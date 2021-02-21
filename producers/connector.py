@@ -4,12 +4,20 @@ import logging
 
 import requests
 
-
 logger = logging.getLogger(__name__)
-
 
 KAFKA_CONNECT_URL = "http://localhost:8083/connectors"
 CONNECTOR_NAME = "stations"
+
+CONNECTION_URL = "jdbc:postgresql://postgres:5432/cta"
+CONNECTION_USER = "cta_admin"
+CONNECTION_PASSWORD = "chicago"
+TABLE_WHITELIST = "stations"
+MODE = "incrementing"
+INCREMENTING_COLUMN_NAME = "stop_id"
+TOPIC_PREFIX = "com.udacity."
+POLL_INTERVAL_MS = "3600000"
+
 
 def configure_connector():
     """Starts and configures the Kafka Connect connector"""
@@ -20,54 +28,33 @@ def configure_connector():
         logging.debug("connector already created skipping recreation")
         return
 
-    # TODO: Complete the Kafka Connect Config below.
-    # Directions: Use the JDBC Source Connector to connect to Postgres. Load the `stations` table
-    # using incrementing mode, with `stop_id` as the incrementing column name.
-    # Make sure to think about what an appropriate topic prefix would be, and how frequently Kafka
-    # Connect should run this connector (hint: not very often!)
-        return
+    resp = requests.post(
+        KAFKA_CONNECT_URL,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps({
+            "name": CONNECTOR_NAME,
+            "config": {
+                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "key.converter.schemas.enable": "false",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "false",
+                "batch.max.rows": "500",
+                "connection.url": CONNECTION_URL,
+                "connection.user": CONNECTION_USER,
+                "connection.password": CONNECTION_PASSWORD,
+                "table.whitelist": TABLE_WHITELIST,
+                "mode": MODE,
+                "incrementing.column.name": INCREMENTING_COLUMN_NAME,
+                "topic.prefix": TOPIC_PREFIX,
+                "poll.interval.ms": POLL_INTERVAL_MS
+            }
+        }),
+    )
 
-    # TODO: Complete the Kafka Connect Config below.
-    # Directions: Use the JDBC Source Connector to connect to Postgres. Load the `stations` table
-    # using incrementing mode, with `stop_id` as the incrementing column name.
-    # Make sure to think about what an appropriate topic prefix would be, and how frequently Kafka
-    # Connect should run this connector (hint: not very often!)
-    logger.info("connector code not completed skipping connector creation")
-    #resp = requests.post(
-    #    KAFKA_CONNECT_URL,
-    #    headers={"Content-Type": "application/json"},
-    #    data=json.dumps({
-    #        "name": CONNECTOR_NAME,
-    #        "config": {
-    #            "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-    #            "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-    #            "key.converter.schemas.enable": "false",
-    #            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    #            "value.converter.schemas.enable": "false",
-    #            "batch.max.rows": "500",
-    #            # TODO
-    #            "connection.url": "",
-    #            # TODO
-    #            "connection.user": "",
-    #            # TODO
-    #            "connection.password": "",
-    #            # TODO
-    #            "table.whitelist": "",
-    #            # TODO
-    #            "mode": "",
-    #            # TODO
-    #            "incrementing.column.name": "",
-    #            # TODO
-    #            "topic.prefix": "",
-    #            # TODO
-    #            "poll.interval.ms": "",
-    #        }
-    #    }),
-    #)
-
-    ## Ensure a healthy response was given
-    #resp.raise_for_status()
-    #logging.debug("connector created successfully")
+    # Ensure a healthy response was given
+    resp.raise_for_status()
+    logging.debug("connector created successfully")
 
 
 if __name__ == "__main__":
