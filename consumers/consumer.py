@@ -48,10 +48,11 @@ class KafkaConsumer:
         dotenv_path = Path('../.env')
         load_dotenv(dotenv_path=dotenv_path)
 
+        auto_offset_reset = AutoOffsetReset.EARLIEST.value if self.offset_earliest else AutoOffsetReset.LATEST.value
         self.broker_properties = {
             CommonConfiguration.BOOTSTRAP_SERVERS.value: os.getenv("BROKER_URL"),
             ConsumerConfig.GROUP_ID.value: os.getenv("CONSUMER_GROUP_ID"),
-            ConsumerConfig.AUTO_OFFSET_RESET.value: AutoOffsetReset.EARLIEST.value,
+            ConsumerConfig.AUTO_OFFSET_RESET.value: auto_offset_reset,
             CommonConfiguration.CLIENT_ID.value: socket.gethostname()
         }
 
