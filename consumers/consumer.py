@@ -1,12 +1,21 @@
 """Defines core consumer functionality"""
 import logging
+import sys
 
-import confluent_kafka
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, OFFSET_BEGINNING
 from confluent_kafka.avro import AvroConsumer
-from confluent_kafka.avro.serializer import SerializerError
 from tornado import gen
 
+from configuration.common_configuration import CommonConfiguration
+from configuration.consumer_config import ConsumerConfig
+from configuration.auto_offset_reset import AutoOffsetReset
+from configuration.avro_config import AvroConfig
+
+import os
+import socket
+
+from dotenv import load_dotenv
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +24,13 @@ class KafkaConsumer:
     """Defines the base kafka consumer class"""
 
     def __init__(
-        self,
-        topic_name_pattern,
-        message_handler,
-        is_avro=True,
-        offset_earliest=False,
-        sleep_secs=1.0,
-        consume_timeout=0.1,
+            self,
+            topic_name_pattern,
+            message_handler,
+            is_avro=True,
+            offset_earliest=False,
+            sleep_secs=1.0,
+            consume_timeout=0.1,
     ):
         """Creates a consumer object for asynchronous use"""
         self.topic_name_pattern = topic_name_pattern
@@ -32,44 +41,43 @@ class KafkaConsumer:
 
         #
         #
-        # TODO: Configure the broker properties below. Make sure to reference the project README
+        # DONE: Configure the broker properties below. Make sure to reference the project README
         # and use the Host URL for Kafka and Schema Registry!
         #
         #
+        dotenv_path = Path('../.env')
+        load_dotenv(dotenv_path=dotenv_path)
+
         self.broker_properties = {
-                #
-                # TODO
-                #
+            CommonConfiguration.BOOTSTRAP_SERVERS.value: os.getenv("BROKER_URL"),
+            ConsumerConfig.GROUP_ID.value: os.getenv("CONSUMER_GROUP_ID"),
+            ConsumerConfig.AUTO_OFFSET_RESET.value: AutoOffsetReset.EARLIEST.value,
+            CommonConfiguration.CLIENT_ID.value: socket.gethostname()
         }
 
-        # TODO: Create the Consumer, using the appropriate type.
+        # DONE: Create the Consumer, using the appropriate type.
         if is_avro is True:
-            self.broker_properties["schema.registry.url"] = "http://localhost:8081"
-            #self.consumer = AvroConsumer(...)
+            self.broker_properties[AvroConfig.SCHEMA_REGISTRY_URL.value] = os.getenv("SCHEMA_REGISTRY_URL")
+            self.consumer = AvroConsumer(self.broker_properties)
         else:
-            #self.consumer = Consumer(...)
-            pass
+            self.consumer = Consumer(self.broker_properties)
 
         #
         #
-        # TODO: Configure the AvroConsumer and subscribe to the topics. Make sure to think about
+        # DONE: Configure the AvroConsumer and subscribe to the topics. Make sure to think about
         # how the `on_assign` callback should be invoked.
         #
         #
-        # self.consumer.subscribe( TODO )
+        self.consumer.subscribe([self.topic_name_pattern], on_assign=self.on_assign)
 
     def on_assign(self, consumer, partitions):
         """Callback for when topic assignment takes place"""
-        # TODO: If the topic is configured to use `offset_earliest` set the partition offset to
+        # DONE: If the topic is configured to use `offset_earliest` set the partition offset to
         # the beginning or earliest
-        logger.info("on_assign is incomplete - skipping")
         for partition in partitions:
-            pass
-            #
-            #
-            # TODO
-            #
-            #
+            if self.offset_earliest:
+                partition.offset = OFFSET_BEGINNING
+        consumer.assign(partitions)
 
         logger.info("partitions assigned for %s", self.topic_name_pattern)
         consumer.assign(partitions)
@@ -86,19 +94,27 @@ class KafkaConsumer:
         """Polls for a message. Returns 1 if a message was received, 0 otherwise"""
         #
         #
-        # TODO: Poll Kafka for messages. Make sure to handle any errors or exceptions.
+        # DONE: Poll Kafka for messages. Make sure to handle any errors or exceptions.
         # Additionally, make sure you return 1 when a message is processed, and 0 when no message
         # is retrieved.
         #
         #
-        logger.info("_consume is incomplete - skipping")
-        return 0
-
+        message = self.consumer.poll(self.consume_timeout)
+        if message is None:
+            logger.debug("no message received by consumer")
+            return 0
+        elif message.error() is not None:
+            logger.error(f"error from consumer {message.error()}")
+            return 0
+        else:
+            self.message_handler(message)
+            return 1
 
     def close(self):
         """Cleans up any open kafka consumers"""
         #
         #
-        # TODO: Cleanup the kafka consumer
+        # DONE: Cleanup the kafka consumer
         #
         #
+        self.consumer.close()
