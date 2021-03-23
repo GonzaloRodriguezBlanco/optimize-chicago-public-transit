@@ -27,7 +27,7 @@ CREATE TABLE turnstile (
     station_name VARCHAR,
     line VARCHAR
 ) WITH (
-    KAFKA_TOPIC='com.udacity.turnstile.turnstile_entry',
+    KAFKA_TOPIC='org.chicago.cta.turnstile.turnstile_entry',
     VALUE_FORMAT='avro',
     KEY='station_id'
 );
@@ -35,7 +35,7 @@ CREATE TABLE turnstile (
 CREATE TABLE turnstile_summary
 WITH (VALUE_FORMAT='JSON') AS
     SELECT
-        station_id, COUNT(*) AS `count`
+        station_id, COUNT(*) AS `COUNT`
     FROM turnstile
     GROUP BY station_id;
 """

@@ -15,7 +15,7 @@ CONNECTION_PASSWORD = "chicago"
 TABLE_WHITELIST = "stations"
 MODE = "incrementing"
 INCREMENTING_COLUMN_NAME = "stop_id"
-TOPIC_PREFIX = "com.udacity."
+TOPIC_PREFIX = "org.chicago.cta."
 POLL_INTERVAL_MS = "3600000"
 
 

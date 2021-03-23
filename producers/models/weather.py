@@ -27,12 +27,12 @@ class Weather(Producer):
     winter_months = {0, 1, 2, 3, 10, 11}
     summer_months = {6, 7, 8}
 
-    topic_namespace = 'com.udacity'
-    event_type = 'current_weather_update'
+    topic_namespace = 'org.chicago.cta'
+    version = 'v1'
 
     def __init__(self, month):
 
-        topic_name = f"{Weather.topic_namespace}.{Weather.__name__.lower()}.{Weather.event_type}"
+        topic_name = f"{Weather.topic_namespace}.{Weather.__name__.lower()}.{Weather.version}"
 
         super().__init__(
             topic_name,
