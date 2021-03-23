@@ -17,8 +17,7 @@ class Station(Producer):
 
     value_schema = avro.load(f"{Path(__file__).parents[0]}/schemas/arrival_value.json")
 
-    topic_namespace = 'com.udacity'
-    event_type = 'train_arrives'
+    topic_namespace = 'org.chicago.cta.station.arrivals'
 
     def __init__(self, station_id, name, color, direction_a=None, direction_b=None):
         self.name = name
@@ -30,7 +29,7 @@ class Station(Producer):
                 .replace("'", "")
         )
 
-        topic_name = f"{Station.topic_namespace}.{Station.__name__.lower()}.{Station.event_type}"
+        topic_name = f"{Station.topic_namespace}.{station_name}"
 
         super().__init__(
             topic_name,
@@ -59,10 +58,12 @@ class Station(Producer):
                 "train_id": train.train_id,
                 "direction": direction,
                 "line": self.color.name,
-                "train_status": train.status,
+                "train_status": train.status.name,
                 "prev_station_id": prev_station_id,
                 "prev_direction": prev_direction
             },
+            value_schema=self.value_schema,
+            key_schema=self.key_schema
         )
 
     def __str__(self):

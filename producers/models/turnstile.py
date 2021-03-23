@@ -18,7 +18,7 @@ class Turnstile(Producer):
        f"{Path(__file__).parents[0]}/schemas/turnstile_value.json"
     )
 
-    topic_namespace = 'com.udacity'
+    topic_namespace = 'org.chicago.cta'
 
     event_type = 'turnstile_entry'
 
@@ -55,4 +55,6 @@ class Turnstile(Producer):
                     "station_name": self.station.name,
                     "line": self.station.color.name
                 },
+                value_schema=self.value_schema,
+                key_schema=self.key_schema
             )
