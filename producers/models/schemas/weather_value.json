@@ -9,7 +9,12 @@
     },
     {
       "name": "status",
-      "type": "string"
+      "type": {
+        "type": "enum",
+        "name": "status",
+        "namespace": "producers.model.weather",
+        "symbols": ["sunny", "partly_cloudy", "cloudy", "windy", "precipitation"]
+      }
     }
   ]
 }
