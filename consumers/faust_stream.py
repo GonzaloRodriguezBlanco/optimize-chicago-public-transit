@@ -5,8 +5,8 @@ import faust
 
 logger = logging.getLogger(__name__)
 
-INPUT_TOPIC_NAME = "com.udacity.stations"
-OUTPUT_TOPIC_NAME = "com.udacity.transformed_stations"
+INPUT_TOPIC_NAME = "org.chicago.cta.stations"
+OUTPUT_TOPIC_NAME = "org.chicago.cta.stations.table.v1"
 TABLE_NAME = "stations"
 
 RED_LINE = 'red'
@@ -61,7 +61,7 @@ table = app.Table(
 #
 def mapper(station: Station) -> TransformedStation:
     line = RED_LINE if station.red else BLUE_LINE if station.blue else GREEN_LINE
-    return TransformedStation(station.stop_id, station.station_name, station.order, line)
+    return TransformedStation(station.station_id, station.station_name, station.order, line)
 
 
 @app.agent(topic)
